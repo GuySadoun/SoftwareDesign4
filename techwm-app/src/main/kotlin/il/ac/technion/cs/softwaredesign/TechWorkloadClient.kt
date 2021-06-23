@@ -1,5 +1,6 @@
 package il.ac.technion.cs.softwaredesign
 
+import il.ac.technion.cs.softwaredesign.services.UserManager
 import java.util.concurrent.CompletableFuture
 
 /**
@@ -31,7 +32,7 @@ interface AccessRequest {
 /**
  * This is the main class implementing TechWM Clients, the client layer interacting with the TechWM application.
  */
-open class TechWorkloadUserClient {
+open class TechWorkloadUserClient(val username : String, val techWM : TechWorkloadManager, val userManager: UserManager) {
     /**
      * Login with a given password. A successfully logged-in user is considered "online". If the user is already
      * logged in, this is a no-op.
@@ -40,7 +41,13 @@ open class TechWorkloadUserClient {
      *
      * @throws IllegalArgumentException If the password was wrong or the user is not yet registered.
      */
-    fun login(password: String): CompletableFuture<Unit> = TODO("Implement me!")
+    fun login(password: String): CompletableFuture<Unit> {
+        return techWM.login(username, password).handle { _, e ->
+            if (e != null){
+                throw IllegalArgumentException()
+            }
+        }
+    }
 
     /**
      * Log out of the system. After logging out, a user is no longer considered online.

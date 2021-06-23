@@ -67,7 +67,6 @@ class TechWorkloadManagerStaffTest {
         for(i in 0..10)
             manager.attachHardwareResource(adminToken, "c$i", "name$i").join()
 
-        val actual1 = manager.submitJob(userToken, "job1", listOf("c1")).join()
         val actual2 = manager.submitJob(adminToken, "job1", listOf("c1"))
         Thread.sleep(300)
         val actual3 = manager.submitJob(adminToken, "job1", listOf("c1"))

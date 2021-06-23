@@ -208,7 +208,6 @@ class AuthenticatedUserTests {
             // Arrange
             val userToChangeUsername = "toChange"
             val userToChange = User(userToChangeUsername, accountType, PermissionLevel.USER)
-            val permissionToChangeTo = PermissionLevel.OPERATOR
 
             val operator = User(username, accountType, PermissionLevel.OPERATOR)
             every { userManagerMock.getUserByUsernameIfExists(username) } returns CompletableFuture.completedFuture(operator)

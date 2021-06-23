@@ -239,4 +239,8 @@ class AuthenticatedUser constructor(val mToken: String,
             CompletableFuture.failedFuture(e)
         }
     }
+
+    fun login() : CompletableFuture<Unit> {
+        return mUserManager.setUserLoginState(mUsername, true)
+    }
 }

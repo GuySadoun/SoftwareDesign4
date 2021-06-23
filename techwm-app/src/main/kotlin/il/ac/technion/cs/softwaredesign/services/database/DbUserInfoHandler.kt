@@ -16,6 +16,7 @@ class DbUserInfoHandler @Inject constructor(databaseFactory: StorageFactoryImpl)
         const val usernameSuffix = "_username"
         const val accountSuffix = "_account"
         const val permissionSuffix = "_permission"
+        const val loginSuffix = "_login"
     }
 
     private val dbUsernameToUserHandler by lazy { databaseFactory.open(DbDirectoriesPaths.UsernameToUser, SerializerImpl()) }
@@ -135,6 +136,21 @@ class DbUserInfoHandler @Inject constructor(databaseFactory: StorageFactoryImpl)
     override fun clearNameFromRevokedList(username: String): CompletableFuture<Unit> {
         return dbIsUsernameRevokedHandler.thenCompose { isUsernameRevokedStorage ->
             isUsernameRevokedStorage.write(username, "0")
+        }
+    }
+
+    override fun getUsernameState(username: String): CompletableFuture<Boolean> {
+        return dbUsernameToUserHandler.thenCompose { usernameToUserStorage ->
+            usernameToUserStorage.read(username + loginSuffix).thenApply { state ->
+                state == "1"
+            }
+        }
+    }
+
+    override fun setUserLoginState(username: String, state: Boolean): CompletableFuture<Unit> {
+        return dbUsernameToUserHandler.thenCompose { usernameToUserStorage ->
+            val stateString = if(state) "1" else "0"
+            usernameToUserStorage.write(username + loginSuffix, stateString)
         }
     }
 }

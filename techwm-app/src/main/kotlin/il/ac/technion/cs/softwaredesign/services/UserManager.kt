@@ -85,4 +85,12 @@ class UserManager @Inject constructor (private val mDbUserInfoHandler: IDbUserIn
     override fun revokeUser(username: String): CompletableFuture<Unit> {
         return mDbUserInfoHandler.revokeUser(username)
     }
+
+    override fun isUsernameLoggedIn(username: String): CompletableFuture<Boolean> {
+        return mDbUserInfoHandler.getUsernameState(username)
+    }
+
+    override fun setUserLoginState(username: String, state: Boolean): CompletableFuture<Unit> {
+        return mDbUserInfoHandler.setUserLoginState(username, state)
+    }
 }

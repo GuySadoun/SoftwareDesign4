@@ -381,13 +381,18 @@ class TechWorkloadManager @Inject constructor(private val mAuthenticator: Authen
     fun cancelJob(token: String, jobId: String): CompletableFuture<Unit> {
         return mAuthenticator.authenticate(token).thenCompose { authUser ->
             authUser.cancelJob(jobId)
-        }.handle { result, e ->
+        }.handle { _, e ->
             if (e != null){
                 if (e.cause is TokenDoesNotExistException)
                     throw PermissionException()
                 throw e
             }
-            result
+        }
+    }
+
+    fun login(username: String, password: String) : CompletableFuture<Unit> {
+        return mAuthenticator.authenticate(username, password).thenCompose { authUser ->
+            authUser.login()
         }
     }
 }

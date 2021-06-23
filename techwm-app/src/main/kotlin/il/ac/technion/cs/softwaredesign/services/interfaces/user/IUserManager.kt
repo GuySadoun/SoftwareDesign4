@@ -13,4 +13,6 @@ interface IUserManager {
     fun isUsernameExists(username: String): CompletableFuture<Boolean>
     fun isUserRevoked(username: String): CompletableFuture<Boolean>
     fun revokeUser(username: String): CompletableFuture<Unit>
+    fun isUsernameLoggedIn(username : String) : CompletableFuture<Boolean>
+    fun setUserLoginState(username : String, state : Boolean) : CompletableFuture<Unit>
 }

@@ -6,11 +6,11 @@ import java.util.concurrent.CompletableFuture
 
 interface IDbUserInfoHandler {
     fun getUserByUsername(username: String): CompletableFuture<User?>
-
     fun setUsernameToUser(user: User): CompletableFuture<Unit>
-
     fun getUserPermissionLevel(username: String) : CompletableFuture<PermissionLevel?>
     fun isUserRevoked(username: String): CompletableFuture<Boolean>
     fun revokeUser(username: String): CompletableFuture<Unit>
     fun clearNameFromRevokedList(username: String): CompletableFuture<Unit>
+    fun getUsernameState(username : String) : CompletableFuture<Boolean>
+    fun setUserLoginState(username : String, state : Boolean) : CompletableFuture<Unit>
 }
