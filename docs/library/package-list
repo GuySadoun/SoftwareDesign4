@@ -1,0 +1,32 @@
+$dokka.format:html-v1
+$dokka.linkExtension:html
+$dokka.location:main.kotlin////PointingToDeclaration/library/main.kotlin/index.html
+$dokka.location:main.kotlin/MemorySecureStorage///PointingToDeclaration/library/main.kotlin/-memory-secure-storage/index.html
+$dokka.location:main.kotlin/MemorySecureStorage/MemorySecureStorage/#/PointingToDeclaration/library/main.kotlin/-memory-secure-storage/-memory-secure-storage.html
+$dokka.location:main.kotlin/MemorySecureStorage/read/#kotlin.ByteArray/PointingToDeclaration/library/main.kotlin/-memory-secure-storage/read.html
+$dokka.location:main.kotlin/MemorySecureStorage/storage/#/PointingToDeclaration/library/main.kotlin/-memory-secure-storage/storage.html
+$dokka.location:main.kotlin/MemorySecureStorage/write/#kotlin.ByteArray#kotlin.ByteArray/PointingToDeclaration/library/main.kotlin/-memory-secure-storage/write.html
+$dokka.location:main.kotlin/MemorySecureStorageFactory///PointingToDeclaration/library/main.kotlin/-memory-secure-storage-factory/index.html
+$dokka.location:main.kotlin/MemorySecureStorageFactory/MemorySecureStorageFactory/#/PointingToDeclaration/library/main.kotlin/-memory-secure-storage-factory/-memory-secure-storage-factory.html
+$dokka.location:main.kotlin/MemorySecureStorageFactory/open/#kotlin.ByteArray/PointingToDeclaration/library/main.kotlin/-memory-secure-storage-factory/open.html
+$dokka.location:main.kotlin/Serializer///PointingToDeclaration/library/main.kotlin/-serializer/index.html
+$dokka.location:main.kotlin/Serializer/deserialize/#kotlin.ByteArray/PointingToDeclaration/library/main.kotlin/-serializer/deserialize.html
+$dokka.location:main.kotlin/Serializer/serialize/#TypeParam(bounds=[kotlin.Any?])/PointingToDeclaration/library/main.kotlin/-serializer/serialize.html
+$dokka.location:main.kotlin/Storage///PointingToDeclaration/library/main.kotlin/-storage/index.html
+$dokka.location:main.kotlin/Storage/Create/#kotlin.String#TypeParam(bounds=[kotlin.Any?])/PointingToDeclaration/library/main.kotlin/-storage/-create.html
+$dokka.location:main.kotlin/Storage/Delete/#kotlin.String/PointingToDeclaration/library/main.kotlin/-storage/-delete.html
+$dokka.location:main.kotlin/Storage/Read/#kotlin.String/PointingToDeclaration/library/main.kotlin/-storage/-read.html
+$dokka.location:main.kotlin/Storage/Update/#kotlin.String#TypeParam(bounds=[kotlin.Any?])/PointingToDeclaration/library/main.kotlin/-storage/-update.html
+$dokka.location:main.kotlin/StorageFactory///PointingToDeclaration/library/main.kotlin/-storage-factory/index.html
+$dokka.location:main.kotlin/StorageFactory/open/#kotlin.String#main.kotlin.Serializer[TypeParam(bounds=[kotlin.Any?])]/PointingToDeclaration/library/main.kotlin/-storage-factory/open.html
+$dokka.location:main.kotlin/StorageFactoryImpl///PointingToDeclaration/library/main.kotlin/-storage-factory-impl/index.html
+$dokka.location:main.kotlin/StorageFactoryImpl/StorageFactoryImpl/#il.ac.technion.cs.softwaredesign.storage.SecureStorageFactory/PointingToDeclaration/library/main.kotlin/-storage-factory-impl/-storage-factory-impl.html
+$dokka.location:main.kotlin/StorageFactoryImpl/open/#kotlin.String#main.kotlin.Serializer[TypeParam(bounds=[kotlin.Any?])]/PointingToDeclaration/library/main.kotlin/-storage-factory-impl/open.html
+$dokka.location:main.kotlin/StorageImpl///PointingToDeclaration/library/main.kotlin/-storage-impl/index.html
+$dokka.location:main.kotlin/StorageImpl/Create/#kotlin.String#TypeParam(bounds=[kotlin.Any?])/PointingToDeclaration/library/main.kotlin/-storage-impl/-create.html
+$dokka.location:main.kotlin/StorageImpl/Delete/#kotlin.String/PointingToDeclaration/library/main.kotlin/-storage-impl/-delete.html
+$dokka.location:main.kotlin/StorageImpl/Read/#kotlin.String/PointingToDeclaration/library/main.kotlin/-storage-impl/-read.html
+$dokka.location:main.kotlin/StorageImpl/StorageImpl/#main.kotlin.Serializer[TypeParam(bounds=[kotlin.Any?])]#il.ac.technion.cs.softwaredesign.storage.SecureStorage/PointingToDeclaration/library/main.kotlin/-storage-impl/-storage-impl.html
+$dokka.location:main.kotlin/StorageImpl/Update/#kotlin.String#TypeParam(bounds=[kotlin.Any?])/PointingToDeclaration/library/main.kotlin/-storage-impl/-update.html
+main.kotlin
+
