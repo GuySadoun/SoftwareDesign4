@@ -10,6 +10,7 @@ import java.util.concurrent.CompletableFuture
 class DbTokenHandler @Inject constructor(databaseFactory: StorageFactoryImpl) : IDbTokenHandler {
     companion object {
         const val deletedTokenDbValue = ""
+        const val usernamePrefix = "u"
     }
 
     private val dbTokenToUsernameHandler by lazy { databaseFactory.open(DbDirectoriesPaths.TokenToUsername, SerializerImpl()) }
@@ -28,7 +29,7 @@ class DbTokenHandler @Inject constructor(databaseFactory: StorageFactoryImpl) : 
                 CompletableFuture.completedFuture(null)
             } else {
                 dbTokenToUsernameHandler.thenCompose {
-                    it.read(token)
+                    it.read(token).thenApply { username -> username?.drop(usernamePrefix.length) }
                 }
             }
         }
@@ -49,7 +50,7 @@ class DbTokenHandler @Inject constructor(databaseFactory: StorageFactoryImpl) : 
                 throw TokenWasDeletedAndCantBeReusedException()
 
             deleteUserPreviousTokenIfExist(username)
-                .thenCompose { dbTokenToUsernameHandler.thenCompose { it.write(token, username) } }
+                .thenCompose { dbTokenToUsernameHandler.thenCompose { it.write(token, usernamePrefix + username) } }
                 .thenCompose { dbUsernameToTokenHandler.thenCompose { it.write(username, token) } }
         }
     }

@@ -12,19 +12,19 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkClass
 import io.mockk.verify
-import library.DbFactory
-import library.interfaces.IDbHandler
+import main.kotlin.Storage
+import main.kotlin.StorageFactoryImpl
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
-import testDoubles.DbHandlerFake
+import testDoubles.StorageFake
 import java.util.concurrent.CompletableFuture
 
 class DbUserInfoTests {
     private val username = "username"
     private val user = User(username, AccountType.DEFAULT, PermissionLevel.USER)
 
-    private val dbHandlerFake = DbHandlerFake()
+    private val dbHandlerFake = StorageFake()
 
     @AfterEach
     fun clearFakeDatabase(){
@@ -34,9 +34,9 @@ class DbUserInfoTests {
     @Test
     fun `check write function is called`(){
         // Arrange
-        val dbHandlerMock = mockk<IDbHandler>(relaxUnitFun = true)
-        val dbFactoryMock = mockkClass(DbFactory::class)
-        every { dbFactoryMock.open(any()) } returns dbHandlerMock
+        val dbHandlerMock = mockk<Storage<String>>(relaxUnitFun = true)
+        val dbFactoryMock = mockkClass(StorageFactoryImpl::class)
+        every { dbFactoryMock.open<String>(any(), any()) } returns CompletableFuture.completedFuture(dbHandlerMock)
         every { dbHandlerMock.write(any(), any()) } returns CompletableFuture.completedFuture(Unit)
 
         val dbUserInfoHandler = DbUserInfoHandler(dbFactoryMock)
@@ -53,8 +53,8 @@ class DbUserInfoTests {
     @Test
     fun `get user by username for existing user`(){
         // Arrange
-        val dbFactoryMock = mockkClass(DbFactory::class)
-        every { dbFactoryMock.open(any()) } returns dbHandlerFake
+        val dbFactoryMock = mockkClass(StorageFactoryImpl::class)
+        every { dbFactoryMock.open<String>(any(), any()) } returns CompletableFuture.completedFuture(dbHandlerFake)
 
         val dbUserInfoHandler = DbUserInfoHandler(dbFactoryMock)
         dbUserInfoHandler.setUsernameToUser(user).join()
@@ -69,8 +69,8 @@ class DbUserInfoTests {
     @Test
     fun `when username does not exist, return null`(){
         // Arrange
-        val dbFactoryMock = mockkClass(DbFactory::class)
-        every { dbFactoryMock.open(any()) } returns dbHandlerFake
+        val dbFactoryMock = mockkClass(StorageFactoryImpl::class)
+        every { dbFactoryMock.open<String>(any(), any()) } returns CompletableFuture.completedFuture(dbHandlerFake)
 
         val dbUserInfoHandler = DbUserInfoHandler(dbFactoryMock)
 
@@ -84,8 +84,8 @@ class DbUserInfoTests {
     @Test
     fun `isUserRevoked on non-revoked user returns false`() {
         // Arrange
-        val dbFactoryMock = mockkClass(DbFactory::class)
-        every { dbFactoryMock.open(any()) } returns dbHandlerFake
+        val dbFactoryMock = mockkClass(StorageFactoryImpl::class)
+        every { dbFactoryMock.open<String>(any(), any()) } returns CompletableFuture.completedFuture(dbHandlerFake)
         val dbUserInfoHandler = DbUserInfoHandler(dbFactoryMock)
 
         // Act & Assert
@@ -95,8 +95,8 @@ class DbUserInfoTests {
     @Test
     fun `after revoking user isUserRevoked returns true`() {
         // Arrange
-        val dbFactoryMock = mockkClass(DbFactory::class)
-        every { dbFactoryMock.open(any()) } returns dbHandlerFake
+        val dbFactoryMock = mockkClass(StorageFactoryImpl::class)
+        every { dbFactoryMock.open<String>(any(), any()) } returns CompletableFuture.completedFuture(dbHandlerFake)
         val dbUserInfoHandler = DbUserInfoHandler(dbFactoryMock)
         dbUserInfoHandler.revokeUser(username).join()
 
@@ -110,9 +110,9 @@ class DbUserInfoTests {
     @Test
     fun `clearNameFromRevokedList calls dbIsUsernameRevokedHandler write`() {
         // Arrange
-        val dbFactoryMock = mockkClass(DbFactory::class)
-        val dbHandlerMock = mockk<IDbHandler>(relaxUnitFun = true)
-        every { dbFactoryMock.open(DbDirectoriesPaths.UsernameIsRevoked) } returns dbHandlerMock
+        val dbFactoryMock = mockkClass(StorageFactoryImpl::class)
+        val dbHandlerMock = mockk<Storage<String>>(relaxUnitFun = true)
+        every { dbFactoryMock.open<String>(DbDirectoriesPaths.UsernameIsRevoked, any()) } returns CompletableFuture.completedFuture(dbHandlerMock)
         every { dbHandlerMock.write(any(), any()) } returns CompletableFuture.completedFuture(Unit)
         val dbUserInfoHandler = DbUserInfoHandler(dbFactoryMock)
 

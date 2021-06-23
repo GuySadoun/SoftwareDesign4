@@ -5,8 +5,8 @@ import il.ac.technion.cs.softwaredesign.services.database.DbPasswordReader
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkClass
-import library.DbFactory
-import library.interfaces.IDbHandler
+import main.kotlin.Storage
+import main.kotlin.StorageFactoryImpl
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Assertions
 import java.util.concurrent.CompletableFuture
@@ -19,10 +19,10 @@ class DbPasswordReaderTests {
     @Test
     fun `read password of existing user`() {
         // Arrange
-        val dbReaderStub = mockk<IDbHandler>()
+        val dbReaderStub = mockk<Storage<String>>()
         every { dbReaderStub.read(username) } returns CompletableFuture.completedFuture(expected)
-        val dbFactoryMock = mockkClass(DbFactory::class)
-        every { dbFactoryMock.open(DbDirectoriesPaths.UsernameToPassword) } returns dbReaderStub
+        val dbFactoryMock = mockkClass(StorageFactoryImpl::class)
+        every { dbFactoryMock.open<String>(DbDirectoriesPaths.UsernameToPassword, any()) } returns CompletableFuture.completedFuture(dbReaderStub)
 
         val dbPasswordsReader = DbPasswordReader(dbFactoryMock)
 
@@ -36,10 +36,10 @@ class DbPasswordReaderTests {
     @Test
     fun `when user does not exist, return null`() {
         // Arrange
-        val dbReaderStub = mockk<IDbHandler>()
+        val dbReaderStub = mockk<Storage<String>>()
         every { dbReaderStub.read(username) } returns CompletableFuture.completedFuture(null)
-        val dbFactoryMock = mockkClass(DbFactory::class)
-        every { dbFactoryMock.open(DbDirectoriesPaths.UsernameToPassword) } returns dbReaderStub
+        val dbFactoryMock = mockkClass(StorageFactoryImpl::class)
+        every { dbFactoryMock.open<String>(DbDirectoriesPaths.UsernameToPassword, any()) } returns CompletableFuture.completedFuture(dbReaderStub)
         val dbPasswordsReader = DbPasswordReader(dbFactoryMock)
 
         // Act

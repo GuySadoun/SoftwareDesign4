@@ -6,10 +6,10 @@ import il.ac.technion.cs.softwaredesign.IdAlreadyExistException
 import il.ac.technion.cs.softwaredesign.services.database.DbDirectoriesPaths
 import il.ac.technion.cs.softwaredesign.services.database.DbResourceHandler
 import io.mockk.*
-import library.DbFactory
-import library.interfaces.IDbHandler
+import main.kotlin.Storage
+import main.kotlin.StorageFactoryImpl
 import org.junit.jupiter.api.*
-import testDoubles.DbHandlerFake
+import testDoubles.StorageFake
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.CompletionException
 
@@ -20,11 +20,11 @@ class DbResourceHandlerTests {
     private val id2 = "0120340hjfXvlEW32"
     private val id3 = "0120340hjfXvlEW43"
 
-    private val dbSerialNumberToIdHandlerFake = DbHandlerFake()
-    private val dbIdToResourceNameHandlerFake = DbHandlerFake()
-    private val dbFactoryMock = mockkClass(DbFactory::class)
-    private val dbSerialNumberToIdHandlerMock = mockk<IDbHandler>(relaxUnitFun = true)
-    private val dbIdToResourceNameHandlerMock = mockk<IDbHandler>(relaxUnitFun = true)
+    private val dbSerialNumberToIdHandlerFake = StorageFake()
+    private val dbIdToResourceNameHandlerFake = StorageFake()
+    private val dbFactoryMock = mockkClass(StorageFactoryImpl::class)
+    private val dbSerialNumberToIdHandlerMock = mockk<Storage<String>>(relaxUnitFun = true)
+    private val dbIdToResourceNameHandlerMock = mockk<Storage<String>>(relaxUnitFun = true)
 
     @BeforeEach
     fun clearFakesDatabasesAndMocks() {
@@ -42,8 +42,8 @@ class DbResourceHandlerTests {
         @Test
         fun `check first hardware insertion writes to db and initialize size`() {
             // Arrange
-            every { dbFactoryMock.open(DbDirectoriesPaths.SerialNumberToId) } returns dbSerialNumberToIdHandlerMock
-            every { dbFactoryMock.open(DbDirectoriesPaths.IdToResourceName) } returns dbIdToResourceNameHandlerMock
+            every { dbFactoryMock.open<String>(DbDirectoriesPaths.SerialNumberToId, any()) } returns CompletableFuture.completedFuture(dbSerialNumberToIdHandlerMock)
+            every { dbFactoryMock.open<String>(DbDirectoriesPaths.IdToResourceName, any()) } returns CompletableFuture.completedFuture(dbIdToResourceNameHandlerMock)
             every { dbSerialNumberToIdHandlerMock.read("size") } returns CompletableFuture.completedFuture(null)
             every { dbIdToResourceNameHandlerMock.read(id0) } returns CompletableFuture.completedFuture(null)
             val dbResourceHandler = DbResourceHandler(dbFactoryMock)
@@ -59,8 +59,8 @@ class DbResourceHandlerTests {
         @Test
         fun `check hardware insertion keep serial number`() {
             // Arrange
-            every { dbFactoryMock.open(DbDirectoriesPaths.SerialNumberToId) } returns dbSerialNumberToIdHandlerMock
-            every { dbFactoryMock.open(DbDirectoriesPaths.IdToResourceName) } returns dbIdToResourceNameHandlerMock
+            every { dbFactoryMock.open<String>(DbDirectoriesPaths.SerialNumberToId, any()) } returns CompletableFuture.completedFuture(dbSerialNumberToIdHandlerMock)
+            every { dbFactoryMock.open<String>(DbDirectoriesPaths.IdToResourceName, any()) } returns CompletableFuture.completedFuture(dbIdToResourceNameHandlerMock)
             every { dbSerialNumberToIdHandlerMock.read("size") } returns CompletableFuture.completedFuture("379")
             every { dbIdToResourceNameHandlerMock.read(id0) } returns CompletableFuture.completedFuture(null)
             val dbResourceHandler = DbResourceHandler(dbFactoryMock)
@@ -76,8 +76,8 @@ class DbResourceHandlerTests {
         @Test
         fun `check hardware insertion with existing resource id throws exception`() {
             // Arrange
-            every { dbFactoryMock.open(DbDirectoriesPaths.SerialNumberToId) } returns dbSerialNumberToIdHandlerMock
-            every { dbFactoryMock.open(DbDirectoriesPaths.IdToResourceName) } returns dbIdToResourceNameHandlerMock
+            every { dbFactoryMock.open<String>(DbDirectoriesPaths.SerialNumberToId, any()) } returns CompletableFuture.completedFuture(dbSerialNumberToIdHandlerMock)
+            every { dbFactoryMock.open<String>(DbDirectoriesPaths.IdToResourceName, any()) } returns CompletableFuture.completedFuture(dbIdToResourceNameHandlerMock)
             every { dbSerialNumberToIdHandlerMock.read("size") } returns CompletableFuture.completedFuture("379")
             every { dbIdToResourceNameHandlerMock.read(id0) } returns CompletableFuture.completedFuture("11-name")
             val dbResourceHandler = DbResourceHandler(dbFactoryMock)
@@ -96,8 +96,8 @@ class DbResourceHandlerTests {
         @Test
         fun `getResourceById after insertion returns resource`() {
             // Arrange
-            every { dbFactoryMock.open(DbDirectoriesPaths.SerialNumberToId) } returns dbSerialNumberToIdHandlerFake
-            every { dbFactoryMock.open(DbDirectoriesPaths.IdToResourceName) } returns dbIdToResourceNameHandlerFake
+            every { dbFactoryMock.open<String>(DbDirectoriesPaths.SerialNumberToId, any()) } returns CompletableFuture.completedFuture(dbSerialNumberToIdHandlerFake)
+            every { dbFactoryMock.open<String>(DbDirectoriesPaths.IdToResourceName, any()) } returns CompletableFuture.completedFuture(dbIdToResourceNameHandlerFake)
             val dbResourceHandler = DbResourceHandler(dbFactoryMock)
             dbResourceHandler.addHardwareResource(id0, name).join()
 
@@ -114,8 +114,8 @@ class DbResourceHandlerTests {
         @Test
         fun `getResourceId keep order of serial numbers`(){
             // Arrange
-            every { dbFactoryMock.open(DbDirectoriesPaths.SerialNumberToId) } returns dbSerialNumberToIdHandlerFake
-            every { dbFactoryMock.open(DbDirectoriesPaths.IdToResourceName) } returns dbIdToResourceNameHandlerFake
+            every { dbFactoryMock.open<String>(DbDirectoriesPaths.SerialNumberToId, any()) } returns CompletableFuture.completedFuture(dbSerialNumberToIdHandlerFake)
+            every { dbFactoryMock.open<String>(DbDirectoriesPaths.IdToResourceName, any()) } returns CompletableFuture.completedFuture(dbIdToResourceNameHandlerFake)
             val dbResourceHandler = DbResourceHandler(dbFactoryMock)
 
             dbResourceHandler.addHardwareResource(id0, name).join()
@@ -134,8 +134,8 @@ class DbResourceHandlerTests {
         @Test
         fun `getResourceId keeps the order`() {
             // Arrange
-            every { dbFactoryMock.open(DbDirectoriesPaths.SerialNumberToId) } returns dbSerialNumberToIdHandlerFake
-            every { dbFactoryMock.open(DbDirectoriesPaths.IdToResourceName) } returns dbIdToResourceNameHandlerFake
+            every { dbFactoryMock.open<String>(DbDirectoriesPaths.SerialNumberToId, any()) } returns CompletableFuture.completedFuture(dbSerialNumberToIdHandlerFake)
+            every { dbFactoryMock.open<String>(DbDirectoriesPaths.IdToResourceName, any()) } returns CompletableFuture.completedFuture(dbIdToResourceNameHandlerFake)
             val dbResourceHandler = DbResourceHandler(dbFactoryMock)
 
             dbResourceHandler.addHardwareResource(id0, name).join()

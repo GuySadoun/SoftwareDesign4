@@ -6,12 +6,13 @@ import il.ac.technion.cs.softwaredesign.services.database.DbDirectoriesPaths
 import il.ac.technion.cs.softwaredesign.services.database.DbJobHandler
 import io.mockk.every
 import io.mockk.mockkClass
-import library.DbFactory
+import main.kotlin.StorageFactoryImpl
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import testDoubles.DbHandlerFake
+import testDoubles.StorageFake
+import java.util.concurrent.CompletableFuture
 
 class DbJobHandlerTests {
     private val jobName = "Menashe"
@@ -21,13 +22,13 @@ class DbJobHandlerTests {
     private val id1 = "1"
     val jobDescription: JobDescription = JobDescription(jobName, resources, username, JobStatus.QUEUED)
 
-    private val dbJobIdToJobInfoFake = DbHandlerFake()
-    private val dbFactoryMock = mockkClass(DbFactory::class)
+    private val dbJobIdToJobInfoFake = StorageFake()
+    private val dbFactoryMock = mockkClass(StorageFactoryImpl::class)
     private val dbJobHandler : DbJobHandler = DbJobHandler(dbFactoryMock)
 
     @BeforeEach
     fun clearFakesDatabasesAndMocks() {
-        every { dbFactoryMock.open(DbDirectoriesPaths.JobIdToJobInfo) } returns dbJobIdToJobInfoFake
+        every { dbFactoryMock.open<String>(DbDirectoriesPaths.JobIdToJobInfo,any()) } returns CompletableFuture.completedFuture(dbJobIdToJobInfoFake)
         dbJobIdToJobInfoFake.clearDatabase()
     }
 
