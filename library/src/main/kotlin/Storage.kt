@@ -12,14 +12,14 @@ interface Storage<DataEntry> {
      *
      * @return true if the operation succeeded, and false otherwise (if the key already existed)
      */
-    fun Create(key: String, dataEntry: DataEntry) : CompletableFuture<Boolean>
+    fun create(key: String, dataEntry: DataEntry) : CompletableFuture<Boolean>
 
     /**
      * Fetch the value that is stored in the DB and associated with [key], only if the key exists.
      *
      * @return the entry on success, and null if the key does not exist
      */
-    fun Read(key: String) : CompletableFuture<DataEntry?>
+    fun read(key: String) : CompletableFuture<DataEntry?>
 
     /**
      * Change the value associated with [key] in the DB.
@@ -27,12 +27,21 @@ interface Storage<DataEntry> {
      *
      * @return true if the operation succeeded, and false if the key does not exist
      */
-    fun Update(key: String, dataEntry: DataEntry) : CompletableFuture<Boolean>
+    fun update(key: String, dataEntry: DataEntry) : CompletableFuture<Boolean>
 
     /**
      * Delete the value that is associated with [key] in the DB.
      *
      * @return true if the operation succeeded, and false if the key does not exist
      */
-    fun Delete(key: String) : CompletableFuture<Boolean>
+    fun delete(key: String) : CompletableFuture<Boolean>
+
+    /**
+     * Write the value to DB, override it's value or create a new one
+     *
+     * @param key
+     * @param dataEntry
+     * @return
+     */
+    fun write(key: String, dataEntry: DataEntry) : CompletableFuture<Unit>
 }

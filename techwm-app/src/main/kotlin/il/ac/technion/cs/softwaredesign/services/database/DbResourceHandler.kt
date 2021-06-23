@@ -2,18 +2,19 @@ package il.ac.technion.cs.softwaredesign.services.database
 
 import com.google.inject.Inject
 import il.ac.technion.cs.softwaredesign.IdAlreadyExistException
-import library.DbFactory
+import main.kotlin.SerializerImpl
+import main.kotlin.StorageFactoryImpl
 import java.util.concurrent.CompletableFuture
 
-class DbResourceHandler @Inject constructor(databaseFactory: DbFactory) {
+class DbResourceHandler @Inject constructor(databaseFactory: StorageFactoryImpl) {
     companion object {
         const val serialNumberSeparator = "-"
         const val AvailableSymbol = "1"
         const val UnavailableSymbol = "0"
     }
 
-    private val dbSerialNumberToIdHandler by lazy { databaseFactory.open(DbDirectoriesPaths.SerialNumberToId) }
-    private val dbIdToResourceInfoHandler by lazy { databaseFactory.open(DbDirectoriesPaths.IdToResourceName) }
+    private val dbSerialNumberToIdHandler by lazy { databaseFactory.open(DbDirectoriesPaths.SerialNumberToId, SerializerImpl()) }
+    private val dbIdToResourceInfoHandler by lazy { databaseFactory.open(DbDirectoriesPaths.IdToResourceName, SerializerImpl()) }
 
     /**
      * Get resource by id from DB if id exists
@@ -22,19 +23,21 @@ class DbResourceHandler @Inject constructor(databaseFactory: DbFactory) {
      * @return CompletableFuture of the info if id exists in DB, else CompletableFuture<null>
      */
     fun getResourceById(id: String) : CompletableFuture<ResourceInfo?> {
-        return dbIdToResourceInfoHandler.read(id).thenApply { resourceInfoString ->
-            if (resourceInfoString.isNullOrEmpty())
-                null
-            else {
-                val isAvailable = resourceInfoString[0] == '1'
-                val splitResourceInfoString = resourceInfoString.split(serialNumberSeparator)
+        return dbIdToResourceInfoHandler.thenCompose {
+            it.read(id).thenApply { resourceInfoString ->
+                if (resourceInfoString.isNullOrEmpty())
+                    null
+                else {
+                    val isAvailable = resourceInfoString[0] == '1'
+                    val splitResourceInfoString = resourceInfoString.split(serialNumberSeparator)
 
-                val serialNumber = splitResourceInfoString[0]
-                    .substring(1) // emit availability symbol
-                    .toInt()
-                val resourceName = splitResourceInfoString[1]
+                    val serialNumber = splitResourceInfoString[0]
+                        .substring(1) // emit availability symbol
+                        .toInt()
+                    val resourceName = splitResourceInfoString[1]
 
-                ResourceInfo(isAvailable, serialNumber, resourceName)
+                    ResourceInfo(isAvailable, serialNumber, resourceName)
+                }
             }
         }
     }
@@ -51,14 +54,21 @@ class DbResourceHandler @Inject constructor(databaseFactory: DbFactory) {
             if (resource != null) {
                 throw IdAlreadyExistException()
             }
-        }.thenCompose { dbSerialNumberToIdHandler.read("size") }.thenCompose { flow ->
-                val serialNumber: Int = flow?.toInt() ?: 0
+        }.thenCompose {
+            dbSerialNumberToIdHandler.thenCompose { storage ->
+                storage.read("size").thenCompose { size ->
+                    val serialNumber: Int = size?.toInt() ?: 0
 
-                dbSerialNumberToIdHandler.write(serialNumber.toString(), id).thenCompose {
-                    dbSerialNumberToIdHandler.write("size", (serialNumber + 1).toString()).thenCompose {
-                        dbIdToResourceInfoHandler.write(id, "$AvailableSymbol$serialNumber$serialNumberSeparator$name") }
+                    storage.write(serialNumber.toString(), id).thenCompose {
+                        storage.write("size", (serialNumber + 1).toString()).thenCompose {
+                            dbIdToResourceInfoHandler.thenCompose {
+                                it.write(id, "$AvailableSymbol$serialNumber$serialNumberSeparator$name")
+                            }
+                        }
                     }
+                }
             }
+        }
     }
 
     /**
@@ -68,7 +78,9 @@ class DbResourceHandler @Inject constructor(databaseFactory: DbFactory) {
      * @return CompletableFuture of the info if id exists in DB, else CompletableFuture<null>
      */
     fun getResourceIdBySerialNumber(serialNumber: Int): CompletableFuture<String?> {
-        return dbSerialNumberToIdHandler.read(serialNumber.toString())
+        return dbSerialNumberToIdHandler.thenCompose {
+            it.read(serialNumber.toString())
+        }
     }
 
     /**
@@ -77,8 +89,10 @@ class DbResourceHandler @Inject constructor(databaseFactory: DbFactory) {
      * @return CompletableFuture of how many resources exist in DB
      */
     fun getResourcesSize(): CompletableFuture<Int> {
-        return dbSerialNumberToIdHandler.read("size")
-            .thenApply { size -> size?.toInt() ?: 0 }
+        return dbSerialNumberToIdHandler.thenCompose {
+            it.read("size")
+                .thenApply { size -> size?.toInt() ?: 0 }
+        }
     }
 
     /**
@@ -91,7 +105,9 @@ class DbResourceHandler @Inject constructor(databaseFactory: DbFactory) {
         return getResourceById(id).thenCompose { resource ->
             val serialNumber = resource!!.serialNumber
             val name = resource.name
-            dbIdToResourceInfoHandler.write(id, "$AvailableSymbol$serialNumber$serialNumberSeparator$name")
+            dbIdToResourceInfoHandler.thenCompose {
+                it.write(id, "$AvailableSymbol$serialNumber$serialNumberSeparator$name")
+            }
         }
     }
 
@@ -105,7 +121,9 @@ class DbResourceHandler @Inject constructor(databaseFactory: DbFactory) {
         return getResourceById(id).thenCompose { resource ->
             val serialNumber = resource!!.serialNumber
             val name = resource.name
-            dbIdToResourceInfoHandler.write(id, "$UnavailableSymbol$serialNumber$serialNumberSeparator$name")
+            dbIdToResourceInfoHandler.thenCompose {
+                it.write(id, "$UnavailableSymbol$serialNumber$serialNumberSeparator$name")
+            }
         }
     }
 }

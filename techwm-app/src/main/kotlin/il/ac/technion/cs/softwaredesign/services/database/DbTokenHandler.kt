@@ -3,19 +3,18 @@ package il.ac.technion.cs.softwaredesign.services.database
 import com.google.inject.Inject
 import il.ac.technion.cs.softwaredesign.TokenWasDeletedAndCantBeReusedException
 import il.ac.technion.cs.softwaredesign.services.interfaces.db.IDbTokenHandler
-import library.DbFactory
-import library.SecureStorageStringWrapper
-import library.interfaces.IDbHandler
+import main.kotlin.SerializerImpl
+import main.kotlin.StorageFactoryImpl
 import java.util.concurrent.CompletableFuture
 
-class DbTokenHandler @Inject constructor(databaseFactory: DbFactory) : IDbTokenHandler {
+class DbTokenHandler @Inject constructor(databaseFactory: StorageFactoryImpl) : IDbTokenHandler {
     companion object {
         const val deletedTokenDbValue = ""
     }
 
-    private val dbTokenToUsernameHandler by lazy { databaseFactory.open(DbDirectoriesPaths.TokenToUsername) }
-    private val dbUsernameToTokenHandler by lazy { databaseFactory.open(DbDirectoriesPaths.UsernameToToken) }
-    private val dbDeletedTokenHandler by lazy { databaseFactory.open(DbDirectoriesPaths.DeletedTokens) }
+    private val dbTokenToUsernameHandler by lazy { databaseFactory.open(DbDirectoriesPaths.TokenToUsername, SerializerImpl()) }
+    private val dbUsernameToTokenHandler by lazy { databaseFactory.open(DbDirectoriesPaths.UsernameToToken, SerializerImpl()) }
+    private val dbDeletedTokenHandler by lazy { databaseFactory.open(DbDirectoriesPaths.DeletedTokens, SerializerImpl()) }
 
     /**
      * Get username by token if token exists
@@ -25,10 +24,13 @@ class DbTokenHandler @Inject constructor(databaseFactory: DbFactory) : IDbTokenH
      */
     override fun getUsernameByToken(token: String): CompletableFuture<String?> {
         return isDeleted(token).thenCompose { deleted ->
-            if (deleted)
+            if (deleted) {
                 CompletableFuture.completedFuture(null)
-            else
-                dbTokenToUsernameHandler.read(token)
+            } else {
+                dbTokenToUsernameHandler.thenCompose {
+                    it.read(token)
+                }
+            }
         }
     }
 
@@ -47,8 +49,8 @@ class DbTokenHandler @Inject constructor(databaseFactory: DbFactory) : IDbTokenH
                 throw TokenWasDeletedAndCantBeReusedException()
 
             deleteUserPreviousTokenIfExist(username)
-                .thenCompose { dbTokenToUsernameHandler.write(token, username) }
-                .thenCompose { dbUsernameToTokenHandler.write(username, token) }
+                .thenCompose { dbTokenToUsernameHandler.thenCompose { it.write(token, username) } }
+                .thenCompose { dbUsernameToTokenHandler.thenCompose { it.write(username, token) } }
         }
     }
 
@@ -59,8 +61,10 @@ class DbTokenHandler @Inject constructor(databaseFactory: DbFactory) : IDbTokenH
      * @return CompletableFuture of the answer
      */
     override fun isDeleted(token: String): CompletableFuture<Boolean> {
-        return dbDeletedTokenHandler.read(token).thenApply { deletedIfNotNull ->
-            deletedIfNotNull != null
+        return dbDeletedTokenHandler.thenCompose {
+            it.read(token).thenApply { deletedIfNotNull ->
+                deletedIfNotNull != null
+            }
         }
     }
 
@@ -80,10 +84,10 @@ class DbTokenHandler @Inject constructor(databaseFactory: DbFactory) : IDbTokenH
     }
 
     private fun deleteToken(token: String): CompletableFuture<Unit> {
-        return dbDeletedTokenHandler.write(token, deletedTokenDbValue)
+        return dbDeletedTokenHandler.thenCompose { it.write(token, deletedTokenDbValue) }
     }
 
     private fun getTokenByUsername(username: String): CompletableFuture<String?> {
-        return dbUsernameToTokenHandler.read(username)
+        return dbUsernameToTokenHandler.thenCompose { it.read(username) }
     }
 }

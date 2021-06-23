@@ -3,6 +3,7 @@ package il.ac.technion.cs.softwaredesign
 import com.google.inject.Singleton
 import dev.misfitlabs.kotlinguice4.KotlinModule
 import il.ac.technion.cs.softwaredesign.authentication.Authenticator
+import il.ac.technion.cs.softwaredesign.execution.ExecutionServiceModule
 import il.ac.technion.cs.softwaredesign.services.*
 import il.ac.technion.cs.softwaredesign.services.database.DbPasswordReader
 import il.ac.technion.cs.softwaredesign.services.database.DbPasswordWriter
@@ -17,7 +18,8 @@ import il.ac.technion.cs.softwaredesign.services.interfaces.token.ITokenGenerato
 import il.ac.technion.cs.softwaredesign.services.interfaces.token.ITokenManager
 import il.ac.technion.cs.softwaredesign.services.interfaces.user.IUserManager
 import il.ac.technion.cs.softwaredesign.services.interfaces.user.IUserPasswordVerifier
-import library.LibraryModule
+import il.ac.technion.cs.softwaredesign.storage.SecureStorageModule
+import main.kotlin.StorageFactoryImpl
 
 class TechWorkloadManagerModule : KotlinModule() {
     override fun configure() {
@@ -36,6 +38,9 @@ class TechWorkloadManagerModule : KotlinModule() {
         bind<IDbTokenHandler>().to<DbTokenHandler>().`in`<Singleton>()
         bind<IDbUserInfoHandler>().to<DbUserInfoHandler>().`in`<Singleton>()
 
-        install(LibraryModule())
+        bind<StorageFactoryImpl>().`in`<Singleton>()
+
+        install(SecureStorageModule())
+        install(ExecutionServiceModule())
     }
 }

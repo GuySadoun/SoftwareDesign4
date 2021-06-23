@@ -1,7 +1,7 @@
 plugins {
     application
 }
-
+val externalLibraryVersion: String? by extra
 application {
     mainClass.set("il.ac.technion.cs.softwaredesign.MainKt")
 }
@@ -14,6 +14,7 @@ val mockkVersion: String? by extra
 
 
 dependencies {
+    implementation("il.ac.technion.cs.softwaredesign", "primitive-storage-layer", externalLibraryVersion)
     implementation(project(":library"))
 
     implementation("com.google.inject", "guice", guiceVersion)

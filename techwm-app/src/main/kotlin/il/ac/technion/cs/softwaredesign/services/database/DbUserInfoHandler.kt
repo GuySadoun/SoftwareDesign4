@@ -7,18 +7,19 @@ import il.ac.technion.cs.softwaredesign.PermissionLevel
 import il.ac.technion.cs.softwaredesign.PermissionLevel.*
 import il.ac.technion.cs.softwaredesign.User
 import il.ac.technion.cs.softwaredesign.services.interfaces.db.IDbUserInfoHandler
-import library.DbFactory
+import main.kotlin.SerializerImpl
+import main.kotlin.StorageFactoryImpl
 import java.util.concurrent.CompletableFuture
 
-class DbUserInfoHandler @Inject constructor(databaseFactory: DbFactory) : IDbUserInfoHandler {
+class DbUserInfoHandler @Inject constructor(databaseFactory: StorageFactoryImpl) : IDbUserInfoHandler {
     companion object {
         const val usernameSuffix = "_username"
         const val accountSuffix = "_account"
         const val permissionSuffix = "_permission"
     }
 
-    private val dbUsernameToUserHandler by lazy { databaseFactory.open(DbDirectoriesPaths.UsernameToUser) }
-    private val dbIsUsernameRevokedHandler by lazy { databaseFactory.open(DbDirectoriesPaths.UsernameIsRevoked) }
+    private val dbUsernameToUserHandler by lazy { databaseFactory.open(DbDirectoriesPaths.UsernameToUser, SerializerImpl()) }
+    private val dbIsUsernameRevokedHandler by lazy { databaseFactory.open(DbDirectoriesPaths.UsernameIsRevoked, SerializerImpl()) }
 
     private val accountTypeArray = mapOf<Int?, AccountType>(
         DEFAULT.ordinal to DEFAULT,
@@ -39,14 +40,13 @@ class DbUserInfoHandler @Inject constructor(databaseFactory: DbFactory) : IDbUse
      * @return CompletableFuture of the user if username exists in DB, else CompletableFuture<null>
      */
     override fun getUserByUsername(username: String): CompletableFuture<User?> {
-        return dbUsernameToUserHandler.read(username + usernameSuffix)
-            .thenCompose { usernameString ->
-                dbUsernameToUserHandler.read(username + accountSuffix).thenApply { userAccountType ->
+        return dbUsernameToUserHandler.thenCompose { usernameToUserStorage ->
+            usernameToUserStorage.read(username + usernameSuffix).thenCompose { usernameString ->
+                usernameToUserStorage.read(username + accountSuffix).thenApply { userAccountType ->
                     Pair(usernameString, accountTypeArray[userAccountType?.toInt()])
                 }
-            }
-            .thenCompose { usernameAccountTypePair ->
-                dbUsernameToUserHandler.read(username + permissionSuffix).thenApply { userPermissionLevel ->
+            }.thenCompose { usernameAccountTypePair ->
+                usernameToUserStorage.read(username + permissionSuffix).thenApply { userPermissionLevel ->
                     Triple(
                         usernameAccountTypePair.first,
                         usernameAccountTypePair.second,
@@ -64,6 +64,7 @@ class DbUserInfoHandler @Inject constructor(databaseFactory: DbFactory) : IDbUse
                 else
                     null
             }
+        }
     }
 
     /**
@@ -76,9 +77,11 @@ class DbUserInfoHandler @Inject constructor(databaseFactory: DbFactory) : IDbUse
         val username = user.username
         val accountType = user.account.ordinal.toString()
         val permission = user.permissionLevel.ordinal.toString()
-        return dbUsernameToUserHandler.write(username + usernameSuffix, username)
-            .thenCompose { dbUsernameToUserHandler.write(username + accountSuffix, accountType) }
-            .thenCompose { dbUsernameToUserHandler.write(username + permissionSuffix, permission) }
+        return dbUsernameToUserHandler.thenCompose { usernameToUserStorage ->
+            usernameToUserStorage.write(username + usernameSuffix, username)
+                .thenCompose { usernameToUserStorage.write(username + accountSuffix, accountType) }
+                .thenCompose { usernameToUserStorage.write(username + permissionSuffix, permission) }
+        }
     }
 
     /**
@@ -88,8 +91,10 @@ class DbUserInfoHandler @Inject constructor(databaseFactory: DbFactory) : IDbUse
      * @return CompletableFuture of PermissionLevel if username exists in DB, else CompletableFuture<null>
      */
     override fun getUserPermissionLevel(username: String): CompletableFuture<PermissionLevel?> {
-        return dbUsernameToUserHandler.read(username + permissionSuffix).thenApply { user ->
-            permissionsLevelArray[user?.toInt()]
+        return dbUsernameToUserHandler.thenCompose { usernameToUserStorage ->
+            usernameToUserStorage.read(username + permissionSuffix).thenApply { user ->
+                permissionsLevelArray[user?.toInt()]
+            }
         }
     }
 
@@ -100,8 +105,10 @@ class DbUserInfoHandler @Inject constructor(databaseFactory: DbFactory) : IDbUse
      * @return CompletableFuture of the answer
      */
     override fun isUserRevoked(username: String): CompletableFuture<Boolean> {
-        return dbIsUsernameRevokedHandler.read(username).thenApply {
-            it == "1"
+        return dbIsUsernameRevokedHandler.thenCompose { isUsernameRevokedStorage ->
+            isUsernameRevokedStorage.read(username).thenApply {
+                it == "1"
+            }
         }
     }
 
@@ -113,7 +120,9 @@ class DbUserInfoHandler @Inject constructor(databaseFactory: DbFactory) : IDbUse
      * @return CompletableFuture of the action
      */
     override fun revokeUser(username: String): CompletableFuture<Unit> {
-        return dbIsUsernameRevokedHandler.write(username, "1")
+        return dbIsUsernameRevokedHandler.thenCompose { isUsernameRevokedStorage ->
+            isUsernameRevokedStorage.write(username, "1")
+        }
     }
 
     /**
@@ -124,6 +133,8 @@ class DbUserInfoHandler @Inject constructor(databaseFactory: DbFactory) : IDbUse
      * @return CompletableFuture of the action
      */
     override fun clearNameFromRevokedList(username: String): CompletableFuture<Unit> {
-        return dbIsUsernameRevokedHandler.write(username, "0")
+        return dbIsUsernameRevokedHandler.thenCompose { isUsernameRevokedStorage ->
+            isUsernameRevokedStorage.write(username, "0")
+        }
     }
 }
