@@ -390,9 +390,11 @@ class TechWorkloadManager @Inject constructor(private val mAuthenticator: Authen
         }
     }
 
-    fun login(username: String, password: String) : CompletableFuture<Unit> {
+    fun login(username: String, password: String) : CompletableFuture<String> {
         return mAuthenticator.authenticate(username, password).thenCompose { authUser ->
-            authUser.login()
+            authUser.login().thenApply {
+                authUser.mToken
+            }
         }
     }
 }

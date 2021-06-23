@@ -32,7 +32,10 @@ interface AccessRequest {
 /**
  * This is the main class implementing TechWM Clients, the client layer interacting with the TechWM application.
  */
-open class TechWorkloadUserClient(val username : String, val techWM : TechWorkloadManager, val userManager: UserManager) {
+open class TechWorkloadUserClient(val username : String,
+                                  private val techWM : TechWorkloadManager,
+                                  private val userManager: UserManager) {
+    private var connectedToken : String? = null
     /**
      * Login with a given password. A successfully logged-in user is considered "online". If the user is already
      * logged in, this is a no-op.
@@ -42,7 +45,9 @@ open class TechWorkloadUserClient(val username : String, val techWM : TechWorklo
      * @throws IllegalArgumentException If the password was wrong or the user is not yet registered.
      */
     fun login(password: String): CompletableFuture<Unit> {
-        return techWM.login(username, password).handle { _, e ->
+        return techWM.login(username, password).thenApply { token ->
+            connectedToken = token
+        }.handle { _, e ->
             if (e != null){
                 throw IllegalArgumentException()
             }
@@ -56,7 +61,12 @@ open class TechWorkloadUserClient(val username : String, val techWM : TechWorklo
      *
      * @throws IllegalArgumentException If the user was not previously logged in.
      */
-    fun logout(): CompletableFuture<Unit> = TODO("Implement me!")
+    fun logout(): CompletableFuture<Unit> {
+        return userManager.isUsernameLoggedIn(username).thenCompose { isLoggedIn ->
+            if (isLoggedIn) userManager.setUserLoginState(username, false).thenApply { connectedToken = null }
+            else throw IllegalArgumentException()
+        }
+    }
 
     /**
      * Queue resources for a job.
@@ -66,7 +76,17 @@ open class TechWorkloadUserClient(val username : String, val techWM : TechWorklo
      * @throws PermissionException If the user is not logged in.
      * @throws IllegalArgumentException If the job could not be submitted, according to permission or account policy.
      */
-    fun submitJob(jobName: String, resources: List<String>): CompletableFuture<AllocatedJob> = TODO("Implement me!")
+    fun submitJob(jobName: String, resources: List<String>): CompletableFuture<AllocatedJob> {
+        return userManager.isUsernameLoggedIn(username).thenCompose { isLoggedIn ->
+            if (isLoggedIn) {
+                techWM.submitJob(username, jobName, resources).handle { res, e ->
+                    if (e != null) throw IllegalArgumentException()
+                    else res
+                }
+            }
+            else throw PermissionException()
+        }
+    }
 
     /**
      * As a new user, request access to the system for a given [username] and [password].
