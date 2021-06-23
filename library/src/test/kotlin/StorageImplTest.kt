@@ -23,39 +23,39 @@ class StorageImplTest {
 
     @Test
     fun `Read should return null for non existing key`() =
-        assertNull(storageInstance.Read("Non Existing").join())
+        assertNull(storageInstance.read("Non Existing").join())
 
     @Test
     fun `Delete should fail for non existing key`() =
-        assertFalse(storageInstance.Delete("Non Existing").join())
+        assertFalse(storageInstance.delete("Non Existing").join())
 
     @Test
     fun `Update should fail for non existing key`() =
-        assertFalse(storageInstance.Update("Non Existing", Entry("other value")).join())
+        assertFalse(storageInstance.update("Non Existing", Entry("other value")).join())
 
     @Test
     fun `Read should succeed for an existing key`() {
-        assertTrue(storageInstance.Create("key", Entry("value")).join())
-        assertEquals(storageInstance.Read("key").join(), Entry("value"))
+        assertTrue(storageInstance.create("key", Entry("value")).join())
+        assertEquals(storageInstance.read("key").join(), Entry("value"))
     }
 
     @Test
     fun `Create should fail on existing key`() {
-        assertTrue(storageInstance.Create("key", Entry("value")).join())
-        assertFalse(storageInstance.Create("key", Entry("other value")).join())
+        assertTrue(storageInstance.create("key", Entry("value")).join())
+        assertFalse(storageInstance.create("key", Entry("other value")).join())
     }
 
     @Test
     fun `Update succeeds for existing key`() {
-        assertTrue(storageInstance.Create("key", Entry("value")).join())
-        assertTrue(storageInstance.Update("key", Entry("other value")).join())
-        assertEquals(storageInstance.Read("key").join(), Entry("other value"))
+        assertTrue(storageInstance.create("key", Entry("value")).join())
+        assertTrue(storageInstance.update("key", Entry("other value")).join())
+        assertEquals(storageInstance.read("key").join(), Entry("other value"))
     }
 
     @Test
     fun `Delete succeeds for existing key`() {
-        assertTrue(storageInstance.Create("key", Entry("value")).join())
-        assertTrue(storageInstance.Delete("key").join())
-        assertNull(storageInstance.Read("key").join())
+        assertTrue(storageInstance.create("key", Entry("value")).join())
+        assertTrue(storageInstance.delete("key").join())
+        assertNull(storageInstance.read("key").join())
     }
 }
