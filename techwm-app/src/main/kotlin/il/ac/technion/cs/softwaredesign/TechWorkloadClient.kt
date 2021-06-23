@@ -1,5 +1,6 @@
 package il.ac.technion.cs.softwaredesign
 
+import il.ac.technion.cs.softwaredesign.services.RequestAccessManager
 import il.ac.technion.cs.softwaredesign.services.UserManager
 import java.util.concurrent.CompletableFuture
 
@@ -34,7 +35,8 @@ interface AccessRequest {
  */
 open class TechWorkloadUserClient(val username : String,
                                   private val techWM : TechWorkloadManager,
-                                  private val userManager: UserManager) {
+                                  private val userManager: UserManager,
+                                  private val requestManager: RequestAccessManager) {
     private var connectedToken : String? = null
     /**
      * Login with a given password. A successfully logged-in user is considered "online". If the user is already
@@ -98,7 +100,15 @@ open class TechWorkloadUserClient(val username : String,
      * @throws IllegalArgumentException If the user already requested access and the previous request was not
      * resolved (accepted/denied)
      */
-    fun requestAccessToSystem(username: String, password: String, reason: String): CompletableFuture<Unit> = TODO("Implement me!")
+    fun requestAccessToSystem(username: String, password: String, reason: String): CompletableFuture<Unit> {
+        return requestManager.isRequestForUsernameExists(username)
+            .thenCompose { isRequestForUsernameExists ->
+                if (isRequestForUsernameExists)
+                    throw IllegalArgumentException()
+                else
+                    requestManager.addAccessRequest(AccessRequestImpl(username, reason, password))
+            }
+    }
 
     /**
      * Get online users, possible filtering by a [PermissionLevel]. If [PermissionLevel] is `null`, show all users.

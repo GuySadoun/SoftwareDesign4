@@ -15,5 +15,6 @@ class DbDirectoriesPaths {
         const val IdToResourceName = "IdToResourceName_"
         const val UsernameIsRevoked = "IsUserNameRevoked_"
         const val JobIdToJobInfo = "JobIdToJobInfo_"
+        const val AccessRequests = "AccessRequest_"
     }
 }
